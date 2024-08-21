@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.codewithfk.expensetracker.android"
+    namespace = "com.prakash.expensetracker.android"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.codewithfk.expensetracker.android"
+        applicationId = "com.prakash.expensetracker.android"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.constraintlayout)
     implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
+    implementation(libs.androidx.constraintlayout.core)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
