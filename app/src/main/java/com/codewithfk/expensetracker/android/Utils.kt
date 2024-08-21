@@ -43,16 +43,36 @@ object Utils {
         println("Today is $date")
         return date.time
     }
+
     fun getItemIcon(item: ExpenseEntity): Int {
-        return if (item.category == "Paypal") {
-            R.drawable.ic_paypal
-        } else if (item.category == "Netflix") {
-            R.drawable.ic_netflix
-        } else if (item.category == "Starbucks") {
-            R.drawable.ic_starbucks
-        } else {
-            R.drawable.ic_upwork
+        if (item.category == "Salary") {
+            return R.drawable.ic_salary
+        } else if (item.category == "Bills") {
+            return R.drawable.ic_bills
+        } else if (item.category == "EMI") {
+            return R.drawable.ic_emi
+        } else if (item.category == "Entertainment") {
+            return R.drawable.ic_entertainment
+        } else if (item.category == "Food & Drinks") {
+            return R.drawable.ic_foodanddrinks
+        } else if (item.category == "Fuel") {
+            return R.drawable.ic_fuel
+        } else if (item.category == "Groceries") {
+            return R.drawable.ic_groceries
+        } else if (item.category == "Health") {
+            return R.drawable.ic_health
+        } else if (item.category == "Investment") {
+            return R.drawable.ic_investment
+        } else if (item.category == "Shopping") {
+            return R.drawable.ic_shopping
+        } else if (item.category == "Money Transfer") {
+            return R.drawable.ic_transfer
+        } else if (item.category == "Travel") {
+            return R.drawable.ic_travel
+        } else{
+            return R.drawable.ic_other
         }
     }
+
 
 }

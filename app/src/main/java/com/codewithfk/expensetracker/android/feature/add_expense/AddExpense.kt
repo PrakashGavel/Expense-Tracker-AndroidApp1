@@ -177,7 +177,7 @@ fun DataForm(modifier: Modifier, onAddExpenseClick: (model: ExpenseEntity) -> Un
         ExpenseTextView(text = "Category", fontSize = 14.sp)
         Spacer(modifier = Modifier.size(4.dp))
         ExpenseDropDown(
-            listOf("Netflix", "Paypal", "Starbucks", "Salary", "Upwork"),
+            listOf("Salary", "Bills", "EMI", "Entertainment", "Food & Drinks", "Fuel", "Groceries", "Health", "Investment", "Shopping", "Money Transfer", "Travel", "Other"),
             onItemSelected = {
                 category.value = it
             })

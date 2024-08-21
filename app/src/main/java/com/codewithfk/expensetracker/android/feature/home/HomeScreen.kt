@@ -1,5 +1,8 @@
 package com.codewithfk.expensetracker.android.feature.home
 
+import android.os.Build
+import android.widget.DatePicker
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,9 +19,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,46 +35,61 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.codewithfk.expensetracker.android.R
 import com.codewithfk.expensetracker.android.data.model.ExpenseEntity
 import com.codewithfk.expensetracker.android.ui.theme.Zinc
 import com.codewithfk.expensetracker.android.viewmodel.HomeViewModel
 import com.codewithfk.expensetracker.android.viewmodel.HomeViewModelFactory
 import com.codewithfk.expensetracker.android.widget.ExpenseTextView
-import com.codewithfk.expensetracker.android.R
-import com.codewithfk.expensetracker.android.Utils
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Calendar
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HomeScreen(navController: NavController) {
     val viewModel = HomeViewModelFactory(LocalContext.current).create(HomeViewModel::class.java)
     Surface(modifier = Modifier.fillMaxSize()) {
         ConstraintLayout(modifier = Modifier.fillMaxSize()) {
             val (nameRow, list, card, topBar, add) = createRefs()
-            Image(painter = painterResource(id = R.drawable.ic_topbar), contentDescription = null,
+            Image(
+                painter = painterResource(id = R.drawable.ic_topbar),
+                contentDescription = null,
                 modifier = Modifier.constrainAs(topBar) {
                     top.linkTo(parent.top)
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
-                })
-            Box(modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 64.dp, start = 16.dp, end = 16.dp)
-                .constrainAs(nameRow) {
-                    top.linkTo(parent.top)
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                }) {
+                }
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 64.dp, start = 16.dp, end = 16.dp)
+                    .constrainAs(nameRow) {
+                        top.linkTo(parent.top)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                    }
+            ) {
                 Column(modifier = Modifier.align(Alignment.CenterStart)) {
-                    ExpenseTextView(text = "Good Afernoon", fontSize = 16.sp, color = Color.White)
+                    val currentTime = LocalTime.now(ZoneId.of("Asia/Kolkata")).hour
+                    val greeting = when (currentTime) {
+                        in 0..11 -> "Good Morning"
+                        in 12..16 -> "Good Afternoon"
+                        else -> "Good Evening"
+                    }
+                    ExpenseTextView(text = greeting, fontSize = 16.sp, color = Color.White)
                     ExpenseTextView(
-                        text = "CodeWithFK",
+                        text = "Prakash's Expense Tracker",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -99,7 +123,8 @@ fun HomeScreen(navController: NavController) {
                         end.linkTo(parent.end)
                         bottom.linkTo(parent.bottom)
                         height = Dimension.fillToConstraints
-                    }, list = state.value
+                    },
+                list = state.value
             )
 
             Image(
@@ -120,7 +145,6 @@ fun HomeScreen(navController: NavController) {
         }
     }
 }
-
 
 @Composable
 fun CardItem(
@@ -176,102 +200,242 @@ fun CardItem(
                 imaget = R.drawable.ic_expense
             )
         }
-
     }
 }
 
-
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TransactionList(
     modifier: Modifier,
     list: List<ExpenseEntity>,
     title: String = "Recent Transactions"
 ) {
+    var expanded by remember { mutableStateOf(false) }
+    var selectedFilter by remember { mutableStateOf("All Time") }
+    var startDate by remember { mutableStateOf<LocalDate?>(null) }
+    var endDate by remember { mutableStateOf<LocalDate?>(null) }
+    var showStartDatePicker by remember { mutableStateOf(false) }
+    var showEndDatePicker by remember { mutableStateOf(false) }
+
+    val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+
+    val filteredList = when (selectedFilter) {
+        "Last 3 Months" -> {
+            val threeMonthsAgo = LocalDate.now().minusMonths(3)
+            list.filter { transaction ->
+                val transactionDate = LocalDate.parse(transaction.date, formatter)
+                !transactionDate.isBefore(threeMonthsAgo)
+            }
+        }
+        "Last 6 Months" -> {
+            val sixMonthsAgo = LocalDate.now().minusMonths(6)
+            list.filter { transaction ->
+                val transactionDate = LocalDate.parse(transaction.date, formatter)
+                !transactionDate.isBefore(sixMonthsAgo)
+            }
+        }
+        "Custom Date" -> {
+            if (startDate != null && endDate != null) {
+                list.filter { transaction ->
+                    val transactionDate = LocalDate.parse(transaction.date, formatter)
+                    (transactionDate.isEqual(startDate) || transactionDate.isAfter(startDate)) &&
+                            (transactionDate.isEqual(endDate) || transactionDate.isBefore(endDate))
+                }
+            } else {
+                list
+            }
+        }
+        else -> list
+    }
+
+    if (showStartDatePicker) {
+        DatePickerDialog(
+            onDateSelected = { date ->
+                startDate = date
+                showStartDatePicker = false
+                showEndDatePicker = true  // Trigger the end date picker after selecting the start date
+            },
+            onDismissRequest = { showStartDatePicker = false }
+        )
+    }
+
+    if (showEndDatePicker) {
+        DatePickerDialog(
+            onDateSelected = { date ->
+                endDate = date
+                showEndDatePicker = false
+            },
+            onDismissRequest = { showEndDatePicker = false }
+        )
+    }
+
     LazyColumn(modifier = modifier.padding(horizontal = 16.dp)) {
         item {
             Column {
                 Box(modifier = modifier.fillMaxWidth()) {
-                    ExpenseTextView(
-                        text = title,
+                    Text(
+                        text = title, // Ensure title is passed here
                         fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
                     )
-                    if (title == "Recent Transactions") {
-                        ExpenseTextView(
-                            text = "See all",
+                    Box(modifier = Modifier.align(Alignment.CenterEnd)) {
+                        Text(
+                            text = selectedFilter, // Ensure selectedFilter is passed here
                             fontSize = 16.sp,
-                            modifier = Modifier.align(Alignment.CenterEnd)
+                            modifier = Modifier
+                                .clickable { expanded = true }
+                                .background(Color.LightGray, RoundedCornerShape(4.dp))
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
                         )
+
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            DropdownMenuItem(onClick = {
+                                selectedFilter = "All Time"
+                                expanded = false
+                            }) {
+                                Text("All Time")
+                            }
+                            DropdownMenuItem(onClick = {
+                                selectedFilter = "Last 3 Months"
+                                expanded = false
+                            }) {
+                                Text("Last 3 Months")
+                            }
+                            DropdownMenuItem(onClick = {
+                                selectedFilter = "Last 6 Months"
+                                expanded = false
+                            }) {
+                                Text("Last 6 Months")
+                            }
+                            DropdownMenuItem(onClick = {
+                                selectedFilter = "Custom Date"
+                                showStartDatePicker = true
+                                expanded = false
+                            }) {
+                                Text("Custom Date")
+                            }
+                        }
                     }
                 }
             }
         }
-        items(list) { item ->
-            val icon = Utils.getItemIcon(item)
-            TransactionItem(
+
+        items(filteredList) { item ->
+            val income = item.amount > 0
+            val image = if (income) R.drawable.ic_income else R.drawable.ic_expense
+            TransactionRow(
                 title = item.title,
+                subtitle = item.date,
                 amount = item.amount.toString(),
-                icon = icon!!,
-                date = item.date,
-                color = if (item.type == "Income") Color.Green else Color.Red
+                isIncome = income,
+                imageRes = image
             )
         }
-
     }
 }
 
-@Composable
-fun TransactionItem(
-    title: String,
-    amount: String,
-    icon: Int,
-    date: String,
-    color: Color
-) {
 
+@Composable
+fun DropdownMenuItem(onClick: () -> Unit, interactionSource: @Composable () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
+            .clickable(onClick = onClick)
+            .padding(8.dp)
     ) {
-        Row() {
-            Image(
-                painter = painterResource(id = icon),
-                contentDescription = null,
-                modifier = Modifier.size(50.dp)
-            )
-            Spacer(modifier = Modifier.size(8.dp))
-            Column {
-                ExpenseTextView(text = title, fontSize = 16.sp)
-                ExpenseTextView(text = date, fontSize = 12.sp)
-            }
-        }
-        ExpenseTextView(
-            text = amount,
-            fontSize = 20.sp,
-            modifier = Modifier.align(Alignment.CenterEnd),
-            color = color
-        )
+        interactionSource()  // Call the interactionSource composable to display content inside the dropdown menu item
     }
 }
+
+
 
 @Composable
 fun CardRowItem(modifier: Modifier, title: String, amount: String, imaget: Int) {
-    Column(modifier = modifier) {
-        Row {
-
-            Image(
-                painter = painterResource(id = imaget),
-                contentDescription = null,
-            )
-            Spacer(modifier = Modifier.size(8.dp))
-            ExpenseTextView(text = title, fontSize = 16.sp, color = Color.White)
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color.White)
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Image(painter = painterResource(id = imaget), contentDescription = null)
+        Spacer(modifier = Modifier.size(8.dp))
+        Column {
+            Text(text = title, color = Color.Gray)
+            Text(text = amount, color = Color.Black, fontWeight = FontWeight.Bold)
         }
-        ExpenseTextView(text = amount, fontSize = 20.sp, color = Color.White)
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun HomeScreenPreview() {
-    HomeScreen(rememberNavController())
+fun TransactionRow(title: String, subtitle: String, amount: String, isIncome: Boolean, imageRes: Int) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .background(Color.White, RoundedCornerShape(8.dp))
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Image(painter = painterResource(id = imageRes), contentDescription = null)
+        Spacer(modifier = Modifier.size(8.dp))
+        Column {
+            Text(text = title, color = Color.Black, fontWeight = FontWeight.Bold)
+            Text(text = subtitle, color = Color.Gray)
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        Text(text = amount, color = if (isIncome) Color.Green else Color.Red)
+    }
+}
+
+// Placeholder for the DatePickerDialog
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun DatePickerDialog(
+    onDateSelected: (LocalDate) -> Unit,
+    onDismissRequest: () -> Unit
+) {
+    val context = LocalContext.current
+
+    // Create a Calendar instance to show current date by default
+    val calendar = Calendar.getInstance()
+
+    // Set up the DatePickerDialog
+    android.app.DatePickerDialog(
+        context,
+        { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
+            // Convert the selected date to LocalDate
+            val selectedDate = LocalDate.of(year, month + 1, dayOfMonth)
+            onDateSelected(selectedDate)
+            onDismissRequest()
+        },
+        calendar.get(Calendar.YEAR),
+        calendar.get(Calendar.MONTH),
+        calendar.get(Calendar.DAY_OF_MONTH)
+    ).show()
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun MainScreen(navController: NavController) {
+    HomeScreen(navController)
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun App() {
+    val navController = rememberNavController()
+    Surface(color = Color.White) {
+        MainScreen(navController)
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@androidx.compose.ui.tooling.preview.Preview
+@Composable
+fun PreviewApp() {
+    App()
 }

@@ -1,6 +1,8 @@
 package com.codewithfk.expensetracker.android.feature.stats
 
+import android.os.Build
 import android.view.LayoutInflater
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +37,7 @@ import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineDataSet
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun StatsScreen(navController: NavController) {
     Scaffold(topBar = {
@@ -126,3 +129,4 @@ fun LineChart(entries: List<Entry>) {
         lineChart.invalidate()
     }
 }
+
