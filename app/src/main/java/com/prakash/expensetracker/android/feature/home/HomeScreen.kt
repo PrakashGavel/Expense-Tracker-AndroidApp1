@@ -47,6 +47,7 @@ import com.prakash.expensetracker.android.ui.theme.Zinc
 import com.prakash.expensetracker.android.viewmodel.HomeViewModel
 import com.prakash.expensetracker.android.viewmodel.HomeViewModelFactory
 import com.prakash.expensetracker.android.widget.ExpenseTextView
+import com.prakash.expensetracker.android.ui.theme.Typography
 import com.prakash.expensetracker.android.Utils
 import java.time.LocalDate
 import java.time.LocalTime
@@ -167,10 +168,14 @@ fun CardItem(
                 .weight(1f)
         ) {
             Column {
-                ExpenseTextView(text = "Total Balance", fontSize = 16.sp, color = Color.White)
                 ExpenseTextView(
-                    text = balance, fontSize = 20.sp, color = Color.White,
-                    fontWeight = FontWeight.Bold
+                    text = "Total Balance",
+                    style = Typography.titleMedium,
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.size(8.dp))
+                ExpenseTextView(
+                    text = balance, style = Typography.headlineLarge, color = Color.White,
                 )
             }
             Image(
@@ -201,6 +206,24 @@ fun CardItem(
                 imaget = R.drawable.ic_expense
             )
         }
+
+    }
+}
+
+@Composable
+fun CardRowItem(modifier: Modifier, title: String, amount: String, imaget: Int) {
+    Column(modifier = modifier) {
+        Row {
+
+            Image(
+                painter = painterResource(id = imaget),
+                contentDescription = null,
+            )
+            Spacer(modifier = Modifier.size(8.dp))
+            ExpenseTextView(text = title, style = Typography.bodyLarge, color = Color.White)
+        }
+        Spacer(modifier = Modifier.size(4.dp))
+        ExpenseTextView(text = amount, style = Typography.titleLarge, color = Color.White)
     }
 }
 
@@ -384,26 +407,6 @@ fun DropdownMenuItem(onClick: () -> Unit, interactionSource: @Composable () -> U
             .padding(8.dp)
     ) {
         interactionSource()  // Call the interactionSource composable to display content inside the dropdown menu item
-    }
-}
-
-
-
-@Composable
-fun CardRowItem(modifier: Modifier, title: String, amount: String, imaget: Int) {
-    Row(
-        modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(Color.White)
-            .padding(8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Image(painter = painterResource(id = imaget), contentDescription = null)
-        Spacer(modifier = Modifier.size(8.dp))
-        Column {
-            Text(text = title, color = Color.Gray)
-            Text(text = amount, color = Color.Black, fontWeight = FontWeight.Bold)
-        }
     }
 }
 

@@ -57,30 +57,42 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun AddExpense(navController: NavController) {
-    val viewModel =
-        AddExpenseViewModelFactory(LocalContext.current).create(AddExpenseViewModel::class.java)
+    val viewModel = AddExpenseViewModelFactory(LocalContext.current).create(AddExpenseViewModel::class.java)
     val coroutineScope = rememberCoroutineScope()
+
     Surface(modifier = Modifier.fillMaxSize()) {
         ConstraintLayout(modifier = Modifier.fillMaxSize()) {
             val (nameRow, list, card, topBar) = createRefs()
-            Image(painter = painterResource(id = R.drawable.ic_topbar),
+
+            Image(
+                painter = painterResource(id = R.drawable.ic_topbar),
                 contentDescription = null,
                 modifier = Modifier.constrainAs(topBar) {
                     top.linkTo(parent.top)
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
-                })
-            Box(modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 64.dp, start = 16.dp, end = 16.dp)
-                .constrainAs(nameRow) {
-                    top.linkTo(parent.top)
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                }) {
-                Image(painter = painterResource(id = R.drawable.ic_back), contentDescription = null)
+                }
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 64.dp, start = 16.dp, end = 16.dp)
+                    .constrainAs(nameRow) {
+                        top.linkTo(parent.top)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                    }
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_back),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .clickable { navController.navigate("/home") { popUpTo(navController.graph.startDestinationId) { inclusive = true } } }
+                        .align(Alignment.CenterStart)
+                )
                 ExpenseTextView(
-                    text = "Add Expense",
+                    text = "Add Transaction",
                     fontSize = 20.sp,
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
@@ -94,20 +106,25 @@ fun AddExpense(navController: NavController) {
                     modifier = Modifier.align(Alignment.CenterEnd)
                 )
             }
-            DataForm(modifier = Modifier.constrainAs(card) {
-                top.linkTo(nameRow.bottom)
-                start.linkTo(parent.start)
-                end.linkTo(parent.end)
-            }, onAddExpenseClick = {
-                coroutineScope.launch {
-                    if (viewModel.addExpense(it)) {
-                        navController.popBackStack()
+
+            DataForm(
+                modifier = Modifier.constrainAs(card) {
+                    top.linkTo(nameRow.bottom)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                },
+                onAddExpenseClick = {
+                    coroutineScope.launch {
+                        if (viewModel.addExpense(it)) {
+                            navController.popBackStack()
+                        }
                     }
                 }
-            })
+            )
         }
     }
 }
+
 
 @Composable
 fun DataForm(modifier: Modifier, onAddExpenseClick: (model: ExpenseEntity) -> Unit) {
@@ -203,7 +220,7 @@ fun DataForm(modifier: Modifier, onAddExpenseClick: (model: ExpenseEntity) -> Un
             )
             onAddExpenseClick(model)
         }, modifier = Modifier.fillMaxWidth()) {
-            ExpenseTextView(text = "Add Expense", fontSize = 14.sp, color = Color.White)
+            ExpenseTextView(text = "Add Transaction", fontSize = 14.sp, color = Color.White)
         }
     }
     if (dateDialogVisibility.value) {
