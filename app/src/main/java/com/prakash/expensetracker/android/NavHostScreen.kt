@@ -1,37 +1,30 @@
 package com.prakash.expensetracker.android
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
-import com.prakash.expensetracker.android.R
 import com.prakash.expensetracker.android.feature.add_expense.AddExpense
 import com.prakash.expensetracker.android.feature.home.HomeScreen
 import com.prakash.expensetracker.android.feature.stats.StatsScreen
 import com.prakash.expensetracker.android.ui.theme.Zinc
+import com.prakash.expensetracker.android.feature.biometric.BiometricLoginScreen
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun NavHostScreen() {
-    val navController = rememberNavController()
-    var bottomBarVisibility by  remember {
+fun NavHostScreen(navController: NavController) {  // Take navController as a parameter
+    var bottomBarVisibility by remember {
         mutableStateOf(true)
-
     }
     Scaffold(bottomBar = {
         AnimatedVisibility(visible = bottomBarVisibility) {
@@ -45,20 +38,22 @@ fun NavHostScreen() {
         }
     }) {
         NavHost(
-            navController = navController,
-            startDestination = "/home",
+            navController = navController as NavHostController,
+            startDestination = "/biometric",  // Start with the BiometricLoginScreen
             modifier = Modifier.padding(it)
         ) {
+            composable(route = "/biometric") {
+                bottomBarVisibility = false
+                BiometricLoginScreen(navController = navController) // Navigate after authentication
+            }
             composable(route = "/home") {
                 bottomBarVisibility = true
                 HomeScreen(navController)
             }
-
             composable(route = "/add") {
                 bottomBarVisibility = false
                 AddExpense(navController)
             }
-
             composable(route = "/stats") {
                 bottomBarVisibility = true
                 StatsScreen(navController)
@@ -66,7 +61,6 @@ fun NavHostScreen() {
         }
     }
 }
-
 
 data class NavItem(
     val route: String,
@@ -78,7 +72,6 @@ fun NavigationBottomBar(
     navController: NavController,
     items: List<NavItem>
 ) {
-    // Bottom Navigation Bar
     val navBackStackEntry = navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry.value?.destination?.route
 
@@ -109,4 +102,3 @@ fun NavigationBottomBar(
         }
     }
 }
-

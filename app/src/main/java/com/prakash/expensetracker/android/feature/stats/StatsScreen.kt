@@ -19,11 +19,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.prakash.expensetracker.android.R
 import com.prakash.expensetracker.android.Utils
 import com.prakash.expensetracker.android.feature.home.TransactionList
@@ -35,6 +37,7 @@ import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineDataSet
+import com.prakash.expensetracker.android.feature.biometric.BiometricLoginScreen
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -129,3 +132,9 @@ fun LineChart(entries: List<Entry>) {
     }
 }
 
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewStatsScreen() {
+    StatsScreen(rememberNavController())
+}
