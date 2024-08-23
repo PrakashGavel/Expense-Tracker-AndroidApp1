@@ -97,11 +97,11 @@ fun HomeScreen(navController: NavController) {
                         color = Color.White
                     )
                 }
-                Image(
-                    painter = painterResource(id = R.drawable.ic_notification),
-                    contentDescription = null,
-                    modifier = Modifier.align(Alignment.CenterEnd)
-                )
+//                Image(
+//                    painter = painterResource(id = R.drawable.ic_notification),
+//                    contentDescription = null,
+//                    modifier = Modifier.align(Alignment.CenterEnd)
+//                )
             }
 
             val state = viewModel.expenses.collectAsState(initial = emptyList())
@@ -134,16 +134,18 @@ fun HomeScreen(navController: NavController) {
                 contentDescription = null,
                 modifier = Modifier
                     .constrainAs(add) {
-                        bottom.linkTo(parent.bottom)
-                        end.linkTo(parent.end)
+                        bottom.linkTo(parent.bottom, margin = 12.dp) // Adjust the margin to move it up
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end) // Center horizontally
                     }
                     .size(48.dp)
-                    .clip(CircleShape)
+                    .clip(RoundedCornerShape(16.dp))
                     .background(Zinc)
                     .clickable {
                         navController.navigate("/add")
                     }
             )
+
         }
     }
 }
