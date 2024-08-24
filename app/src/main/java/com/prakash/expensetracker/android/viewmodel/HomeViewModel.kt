@@ -3,10 +3,12 @@ package com.prakash.expensetracker.android.viewmodel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.prakash.expensetracker.android.Utils
 import com.prakash.expensetracker.android.data.ExpenseDatabase
 import com.prakash.expensetracker.android.data.dao.ExpenseDao
 import com.prakash.expensetracker.android.data.model.ExpenseEntity
+import kotlinx.coroutines.launch
 import java.lang.IllegalArgumentException
 
 class HomeViewModel(val dao: ExpenseDao) : ViewModel() {
@@ -23,15 +25,6 @@ class HomeViewModel(val dao: ExpenseDao) : ViewModel() {
         }
         return "₹ ${Utils.formatToDecimalValue(balance)}"
     }
-
-//    fun getTotalExpense(list: List<ExpenseEntity>): String {
-//        var total = 0.0
-//        for (expense in list) {
-//            total += expense.amount
-//        }
-//
-//        return "₹ ${Utils.formatToDecimalValue(total)}"
-//    }
 
     fun getTotalExpense(list: List<ExpenseEntity>): String {
         var totalExpense = 0.0
@@ -52,6 +45,12 @@ class HomeViewModel(val dao: ExpenseDao) : ViewModel() {
             }
         }
         return "₹ ${Utils.formatToDecimalValue(totalIncome)}"
+    }
+
+    fun deleteTransactions(transactions: List<ExpenseEntity>) {
+        viewModelScope.launch {
+            dao.deleteAll(transactions)
+        }
     }
 }
 

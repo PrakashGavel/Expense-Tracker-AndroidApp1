@@ -48,14 +48,14 @@ fun StatsScreen(navController: NavController) {
                 .fillMaxWidth()
                 .padding(top = 16.dp, start = 16.dp, end = 16.dp, bottom = 8.dp)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_back),
-                contentDescription = null,
-                modifier = Modifier.align(
-                    Alignment.CenterStart
-                ),
-                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.Black)
-            )
+//            Image(
+//                painter = painterResource(id = R.drawable.ic_back),
+//                contentDescription = null,
+//                modifier = Modifier.align(
+//                    Alignment.CenterStart
+//                ),
+//                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.Black)
+//            )
             ExpenseTextView(
                 text = "Statistics",
                 fontSize = 18.sp,
@@ -64,12 +64,12 @@ fun StatsScreen(navController: NavController) {
                     .padding(16.dp)
                     .align(Alignment.Center)
             )
-            Image(
-                painter = painterResource(id = R.drawable.dots_menu),
-                contentDescription = null,
-                modifier = Modifier.align(Alignment.CenterEnd),
-                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.Black)
-            )
+//            Image(
+//                painter = painterResource(id = R.drawable.dots_menu),
+//                contentDescription = null,
+//                modifier = Modifier.align(Alignment.CenterEnd),
+//                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.Black)
+//            )
         }
     }) {
         val viewModel =
@@ -80,7 +80,13 @@ fun StatsScreen(navController: NavController) {
             val entries = viewModel.getEntriesForChart(dataState.value)
             LineChart(entries = entries)
             Spacer(modifier = Modifier.height(16.dp))
-            TransactionList(Modifier, list = topExpense.value, "Top Spending")
+            TransactionList(
+                modifier = Modifier,
+                list = topExpense.value,
+                title = "Top Spending",
+                navController = navController,
+                onDelete = {} // Provide a placeholder lambda if deletion is not required
+            )
         }
     }
 }
@@ -131,7 +137,6 @@ fun LineChart(entries: List<Entry>) {
         lineChart.invalidate()
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable

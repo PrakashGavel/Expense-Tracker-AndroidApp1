@@ -3,9 +3,12 @@ package com.prakash.expensetracker.android.feature.home
 import android.os.Build
 import android.widget.DatePicker
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,10 +18,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -126,7 +131,11 @@ fun HomeScreen(navController: NavController) {
                         bottom.linkTo(parent.bottom)
                         height = Dimension.fillToConstraints
                     },
-                list = state.value
+                list = state.value,
+                navController = navController,
+                onDelete = { transactionsToDelete -> // Implement the deletion logic here
+                    viewModel.deleteTransactions(transactionsToDelete)
+                }
             )
 
             Image(
@@ -145,7 +154,6 @@ fun HomeScreen(navController: NavController) {
                         navController.navigate("/add")
                     }
             )
-
         }
     }
 }
@@ -180,11 +188,11 @@ fun CardItem(
                     text = balance, style = Typography.headlineLarge, color = Color.White,
                 )
             }
-            Image(
-                painter = painterResource(id = R.drawable.dots_menu),
-                contentDescription = null,
-                modifier = Modifier.align(Alignment.CenterEnd)
-            )
+//            Image(
+//                painter = painterResource(id = R.drawable.dots_menu),
+//                contentDescription = null,
+//                modifier = Modifier.align(Alignment.CenterEnd)
+//            )
         }
 
         Box(
@@ -232,9 +240,11 @@ fun CardRowItem(modifier: Modifier, title: String, amount: String, imaget: Int) 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TransactionList(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     list: List<ExpenseEntity>,
-    title: String = "Recent Transactions"
+    title: String = "Recent Transactions",
+    navController: NavController,
+    onDelete: (List<ExpenseEntity>) -> Unit // Callback for deletion
 ) {
     var expanded by remember { mutableStateOf(false) }
     var selectedFilter by remember { mutableStateOf("All Time") }
@@ -242,6 +252,9 @@ fun TransactionList(
     var endDate by remember { mutableStateOf<LocalDate?>(null) }
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
+
+    var selectedItems by remember { mutableStateOf(setOf<Int>()) } // To track selected transactions
+    var isMultiSelectMode by remember { mutableStateOf(false) } // To track if multi-select mode is enabled
 
     val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
@@ -300,13 +313,13 @@ fun TransactionList(
             Column {
                 Box(modifier = modifier.fillMaxWidth()) {
                     Text(
-                        text = title, // Ensure title is passed here
+                        text = title,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Box(modifier = Modifier.align(Alignment.CenterEnd)) {
                         Text(
-                            text = selectedFilter, // Ensure selectedFilter is passed here
+                            text = selectedFilter,
                             fontSize = 16.sp,
                             modifier = Modifier
                                 .clickable { expanded = true }
@@ -357,29 +370,80 @@ fun TransactionList(
             TransactionItem(
                 title = item.title,
                 amount = item.amount.toString(),
-                icon = icon!!, // Pass the icon to TransactionItem
+                icon = icon!!,
                 date = item.date,
-                color = color // Use the appropriate color
+                color = color,
+                isSelected = selectedItems.contains(item.id),
+                onLongClick = {
+                    if (!isMultiSelectMode) {
+                        isMultiSelectMode = true
+                        selectedItems = setOf(item.id!!)
+                    }
+                },
+                onClick = {
+                    if (isMultiSelectMode) {
+                        val itemId = item.id ?: return@TransactionItem
+                        selectedItems = if (selectedItems.contains(itemId)) {
+                            selectedItems - itemId
+                        } else {
+                            selectedItems + itemId
+                        }
+                    }
+                }
             )
+        }
+    }
+
+    if (isMultiSelectMode) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Button(onClick = {
+                val itemsToDelete = filteredList.filter { selectedItems.contains(it.id!!) }
+                onDelete(itemsToDelete)
+                selectedItems = setOf()
+                isMultiSelectMode = false
+            }) {
+                Text("Delete Selected")
+            }
+            Button(onClick = {
+                selectedItems = setOf()
+                isMultiSelectMode = false
+            }) {
+                Text("Cancel")
+            }
         }
     }
 }
 
+
+
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TransactionItem(
     title: String,
     amount: String,
     icon: Int,
     date: String,
-    color: Color
+    color: Color,
+    isSelected: Boolean,
+    onLongClick: () -> Unit,
+    onClick: () -> Unit // Add onClick for single tap selection
 ) {
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
+            .background(if (isSelected) Color.LightGray else Color.Transparent)
+            .combinedClickable(
+                onClick = onClick,  // Handle single click for selection
+                onLongClick = onLongClick
+            )
     ) {
-        Row() {
+        Row {
             Image(
                 painter = painterResource(id = icon),
                 contentDescription = null,
@@ -399,6 +463,7 @@ fun TransactionItem(
         )
     }
 }
+
 
 @Composable
 fun DropdownMenuItem(onClick: () -> Unit, interactionSource: @Composable () -> Unit) {

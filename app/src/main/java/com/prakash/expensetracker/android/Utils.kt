@@ -11,7 +11,7 @@ import java.util.Locale
 object Utils {
 
     fun formatDateToHumanReadableForm(dateInMillis: Long): String {
-        val dateFormatter = SimpleDateFormat("dd/MM/YYYY", Locale.getDefault())
+        val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         return dateFormatter.format(dateInMillis)
     }
 
@@ -29,10 +29,10 @@ object Utils {
         return String.format("%.2f", d)
     }
 
-
     fun getMillisFromDate(date: String): Long {
-       return getMilliFromDate(date)
+        return getMilliFromDate(date)
     }
+
     fun getMilliFromDate(dateFormat: String?): Long {
         var date = Date()
         val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
@@ -41,8 +41,19 @@ object Utils {
         } catch (e: ParseException) {
             e.printStackTrace()
         }
-        println("Today is $date")
         return date.time
+    }
+
+    // Parses a date string in the format "dd/MM/yyyy" to milliseconds
+    fun parseDateToMillis(dateString: String): Long {
+        val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        return try {
+            val date = formatter.parse(dateString)
+            date?.time ?: 0L
+        } catch (e: ParseException) {
+            e.printStackTrace()
+            0L
+        }
     }
 
     fun getItemIcon(item: ExpenseEntity): Int {
@@ -70,10 +81,8 @@ object Utils {
             return R.drawable.ic_transfer
         } else if (item.category == "Travel") {
             return R.drawable.ic_travel
-        } else{
+        } else {
             return R.drawable.ic_other
         }
     }
-
-
 }
