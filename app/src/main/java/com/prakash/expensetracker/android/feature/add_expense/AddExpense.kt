@@ -242,18 +242,28 @@ fun ExpenseDatePickerDialog(
 ) {
     val datePickerState = rememberDatePickerState()
     val selectedDate = datePickerState.selectedDateMillis ?: 0L
-    DatePickerDialog(onDismissRequest = { onDismiss() }, confirmButton = {
-        TextButton(onClick = { onDateSelected(selectedDate) }) {
-            ExpenseTextView(text = "Confirm")
+    val currentDate = System.currentTimeMillis()
+
+    DatePickerDialog(
+        onDismissRequest = { onDismiss() },
+        confirmButton = {
+            TextButton(onClick = { onDateSelected(selectedDate) }) {
+                ExpenseTextView(text = "Confirm")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = { onDismiss() }) {
+                ExpenseTextView(text = "Cancel")
+            }
         }
-    }, dismissButton = {
-        TextButton(onClick = { onDismiss() }) {
-            ExpenseTextView(text = "Cancel")
-        }
-    }) {
-        DatePicker(state = datePickerState)
+    ) {
+        DatePicker(
+            state = datePickerState,
+            dateValidator = { it <= currentDate } // Disable dates after the current date
+        )
     }
 }
+
 
 @Composable
 fun ExpenseDropDown(

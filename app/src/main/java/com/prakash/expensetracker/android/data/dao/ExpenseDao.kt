@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ExpenseDao {
-    @Query("SELECT * FROM expense_table")
+    @Query("SELECT * FROM expense_table ORDER BY date DESC")
     fun getAllExpense(): Flow<List<ExpenseEntity>>
 
     @Query("SELECT * FROM expense_table WHERE type = 'Expense' ORDER BY amount DESC LIMIT 5")
