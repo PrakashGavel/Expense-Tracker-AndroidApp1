@@ -138,6 +138,10 @@ fun DataForm(modifier: Modifier, onAddExpenseClick: (model: ExpenseEntity) -> Un
     val dateDialogVisibility = remember { mutableStateOf(false) }
     val category = remember { mutableStateOf("") }
     val type = remember { mutableStateOf("") }
+    val showError = remember { mutableStateOf(false) }
+
+    val nameError = remember { mutableStateOf(false) }
+    val amountError = remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -154,18 +158,40 @@ fun DataForm(modifier: Modifier, onAddExpenseClick: (model: ExpenseEntity) -> Un
         Spacer(modifier = Modifier.size(4.dp))
         OutlinedTextField(
             value = name.value,
-            onValueChange = { name.value = it },
-            modifier = Modifier.fillMaxWidth()
+            onValueChange = {
+                name.value = it
+                nameError.value = it.any { char -> char.isDigit() }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            isError = nameError.value
         )
+        if (nameError.value) {
+            ExpenseTextView(
+                text = "Transaction name should not contain numbers",
+                fontSize = 12.sp,
+                color = Color.Red
+            )
+        }
         Spacer(modifier = Modifier.size(8.dp))
 
         ExpenseTextView(text = "Amount", fontSize = 14.sp)
         Spacer(modifier = Modifier.size(4.dp))
         OutlinedTextField(
             value = amount.value,
-            onValueChange = { amount.value = it },
-            modifier = Modifier.fillMaxWidth()
+            onValueChange = {
+                amount.value = it
+                amountError.value = it.toDoubleOrNull() == null && it.isNotEmpty()
+            },
+            modifier = Modifier.fillMaxWidth(),
+            isError = amountError.value
         )
+        if (amountError.value) {
+            ExpenseTextView(
+                text = "Please enter a valid number",
+                fontSize = 12.sp,
+                color = Color.Red
+            )
+        }
         Spacer(modifier = Modifier.size(8.dp))
 
         // Date
@@ -181,7 +207,8 @@ fun DataForm(modifier: Modifier, onAddExpenseClick: (model: ExpenseEntity) -> Un
             colors = OutlinedTextFieldDefaults.colors(
                 disabledBorderColor = Color.Black,
                 disabledTextColor = Color.Black
-            )
+            ),
+            isError = showError.value && date.value == 0L
         )
         Spacer(modifier = Modifier.size(8.dp))
 
@@ -192,7 +219,9 @@ fun DataForm(modifier: Modifier, onAddExpenseClick: (model: ExpenseEntity) -> Un
             listOf("Salary", "Bills", "EMI", "Entertainment", "Food & Drinks", "Fuel", "Groceries", "Health", "Investment", "Shopping", "Money Transfer", "Travel", "Other"),
             onItemSelected = {
                 category.value = it
-            })
+            },
+            isError = showError.value && category.value.isEmpty()
+        )
         Spacer(modifier = Modifier.size(8.dp))
 
         // Type Dropdown
@@ -202,20 +231,32 @@ fun DataForm(modifier: Modifier, onAddExpenseClick: (model: ExpenseEntity) -> Un
             listOf("Income", "Expense"),
             onItemSelected = {
                 type.value = it
-            })
+            },
+            isError = showError.value && type.value.isEmpty()
+        )
         Spacer(modifier = Modifier.size(8.dp))
+
+        if (showError.value) {
+            ExpenseTextView(text = "Please fill in all required fields.", fontSize = 12.sp, color = Color.Red)
+            Spacer(modifier = Modifier.size(8.dp))
+        }
 
         // Add Expense Button
         Button(onClick = {
-            val model = ExpenseEntity(
-                null,
-                name.value,
-                amount.value.toDoubleOrNull() ?: 0.0,
-                Utils.formatDateToHumanReadableForm(date.value),
-                category.value,
-                type.value
-            )
-            onAddExpenseClick(model)
+            if (name.value.isEmpty() || amount.value.isEmpty() || date.value == 0L || category.value.isEmpty() || type.value.isEmpty() || nameError.value || amountError.value) {
+                showError.value = true
+            } else {
+                showError.value = false
+                val model = ExpenseEntity(
+                    null,
+                    name.value,
+                    amount.value.toDoubleOrNull() ?: 0.0,
+                    Utils.formatDateToHumanReadableForm(date.value),
+                    category.value,
+                    type.value
+                )
+                onAddExpenseClick(model)
+            }
         }, modifier = Modifier.fillMaxWidth()) {
             ExpenseTextView(text = "Add Transaction", fontSize = 14.sp, color = Color.White)
         }
@@ -231,6 +272,43 @@ fun DataForm(modifier: Modifier, onAddExpenseClick: (model: ExpenseEntity) -> Un
                 dateDialogVisibility.value = false
             }
         )
+    }
+}
+
+@Composable
+fun ExpenseDropDown(
+    listOfItems: List<String>,
+    onItemSelected: (item: String) -> Unit,
+    isError: Boolean = false
+) {
+    val expanded = remember { mutableStateOf(false) }
+    val selectedItem = remember { mutableStateOf<String?>(null) }
+
+    ExposedDropdownMenuBox(expanded = expanded.value, onExpandedChange = { expanded.value = it }) {
+        TextField(
+            value = selectedItem.value ?: "",
+            onValueChange = {},
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(),
+            readOnly = true,
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded.value)
+            },
+            isError = isError // Mark the dropdown field as an error if needed
+        )
+        ExposedDropdownMenu(expanded = expanded.value, onDismissRequest = { expanded.value = false }) {
+            listOfItems.forEach { item ->
+                DropdownMenuItem(
+                    text = { ExpenseTextView(text = item) },
+                    onClick = {
+                        selectedItem.value = item
+                        onItemSelected(item)
+                        expanded.value = false
+                    }
+                )
+            }
+        }
     }
 }
 
@@ -264,41 +342,6 @@ fun ExpenseDatePickerDialog(
     }
 }
 
-
-@Composable
-fun ExpenseDropDown(
-    listOfItems: List<String>,
-    onItemSelected: (item: String) -> Unit
-) {
-    val expanded = remember { mutableStateOf(false) }
-    val selectedItem = remember { mutableStateOf<String?>(null) } // Changed to nullable
-
-    ExposedDropdownMenuBox(expanded = expanded.value, onExpandedChange = { expanded.value = it }) {
-        TextField(
-            value = selectedItem.value ?: "", // Display empty when no item is selected
-            onValueChange = {},
-            modifier = Modifier
-                .fillMaxWidth()
-                .menuAnchor(),
-            readOnly = true,
-            trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded.value)
-            }
-        )
-        ExposedDropdownMenu(expanded = expanded.value, onDismissRequest = { expanded.value = false }) {
-            listOfItems.forEach { item ->
-                DropdownMenuItem(
-                    text = { ExpenseTextView(text = item) },
-                    onClick = {
-                        selectedItem.value = item
-                        onItemSelected(item)
-                        expanded.value = false
-                    }
-                )
-            }
-        }
-    }
-}
 
 
 @Preview(showBackground = true)

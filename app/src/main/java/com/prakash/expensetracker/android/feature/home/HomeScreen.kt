@@ -365,11 +365,13 @@ fun TransactionList(
         // Iterate over the filtered list
         items(filteredList) { item ->
             val icon = Utils.getItemIcon(item) // Get the icon for the current item
-            val color = if (item.type == "Income") Color.Green else Color.Red
+            val color = if (item.type == "Income") Color(0xFF06e28e) else Color.Red
+            val prefix = if (item.type == "Income") "+ ₹ " else "- ₹ "
+            val roundedAmount = String.format("%.2f", item.amount)
 
             TransactionItem(
                 title = item.title,
-                amount = item.amount.toString(),
+                amount = "$prefix$roundedAmount",
                 icon = icon!!,
                 date = item.date,
                 color = color,
@@ -418,8 +420,6 @@ fun TransactionList(
         }
     }
 }
-
-
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
